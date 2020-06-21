@@ -43,8 +43,12 @@ const getConnectionMap = (itemId): ConnectionMap =>
 const setConnection = (itemId, fromId, toId) => {
   ConnectionDBMap[itemId] = ConnectionDBMap[itemId] || {};
 
-  if (ValueDBMap.hasOwnProperty(fromId) && ValueDBMap.hasOwnProperty(toId)) {
-    ConnectionDBMap[itemId][fromId] = toId;
+  if (ValueDBMap.hasOwnProperty(fromId)) {
+    if (typeof toId === "undefined") {
+      delete ConnectionDBMap[itemId][fromId];
+    } else if (ValueDBMap.hasOwnProperty(toId)) {
+      ConnectionDBMap[itemId][fromId] = toId;
+    }
   }
 };
 const setConnectionsFromMap = (itemId, connections: ConnectionMap = {}) => {
@@ -86,8 +90,10 @@ const getConnectedItems = (id): Item[] => {
 };
 const updateItem = ({ id, value, connections }: Item = {}) => {
   if (id) {
-    // TODO: Consider a patch method.
-    setValue(id, value);
+    if (typeof value !== "undefined") {
+      setValue(id, value);
+    }
+
     setConnectionsFromMap(id, connections);
   }
 };
@@ -153,6 +159,39 @@ const relateObjects = (
       id: relationalFieldItemId,
       connections: relationalFieldItemConnectionMap
     });
+  }
+};
+const unrelateObjects = (
+  objectId: string,
+  connectionMap: SmeltedObjectConnectionMap = {}
+) => {
+  const obj = readObject(objectId);
+
+  for (const relationalFieldName in connectionMap) {
+    const idOrIdList = connectionMap[relationalFieldName];
+    const relationalFieldItemId = obj[relationalFieldName];
+    const relationalFieldItemConnectionMap = {};
+
+    if (idOrIdList instanceof Array) {
+      const connectionRemovalMap = {};
+
+      for (const idInList of idOrIdList) {
+        connectionRemovalMap[idInList] = undefined;
+
+        updateItem({
+          id: relationalFieldItemId,
+          connections: connectionRemovalMap
+        });
+      }
+    } else if (typeof idOrIdList === "string") {
+      updateItem({
+        id: objectId,
+        connections: {
+          [relationalFieldItemId]: undefined
+        }
+      });
+      deleteItem(relationalFieldItemId);
+    }
   }
 };
 const readObject = (id: string): SmeltedObject => {
