@@ -161,36 +161,63 @@ const relateObjects = (
     });
   }
 };
+const getObjectRelationalFieldItemIdMap = (
+  objectId: string
+): { [key: string]: string } => {
+  const { connections = {} } = readItem(objectId);
+  const map = {};
+
+  for (const fromId in connections) {
+    const toId = connections[fromId];
+
+    // TRICKY: Check to see if this is a relationship connection or a key/value connection.
+    // IMPORTANT: Omit key/value connections.
+    if (toId === fromId) {
+      // This is a relationship connection.
+      const { value: keyName } = readItem(fromId);
+
+      map[keyName] = toId;
+    }
+  }
+
+  return map;
+};
 const unrelateObjects = (
   objectId: string,
   connectionMap: SmeltedObjectConnectionMap = {}
 ) => {
   const obj = readObject(objectId);
-  // TODO: Make sure key/value connections aren't being removed/disconnected.
+  const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(
+    objectId
+  );
+
   for (const relationalFieldName in connectionMap) {
-    const idOrIdList = connectionMap[relationalFieldName];
-    const relationalFieldItemId = obj[relationalFieldName];
-    const relationalFieldItemConnectionMap = {};
+    // IMPORTANT: Make sure key/value connections aren't being removed/disconnected.
+    if (objectRelationalFieldItemIdMap.hasOwnProperty(relationalFieldName)) {
+      const idOrIdList = connectionMap[relationalFieldName];
+      const relationalFieldItemId = obj[relationalFieldName];
+      const relationalFieldItemConnectionMap = {};
 
-    if (idOrIdList instanceof Array) {
-      const connectionRemovalMap = {};
+      if (idOrIdList instanceof Array) {
+        const connectionRemovalMap = {};
 
-      for (const idInList of idOrIdList) {
-        connectionRemovalMap[idInList] = undefined;
+        for (const idInList of idOrIdList) {
+          connectionRemovalMap[idInList] = undefined;
 
-        updateItem({
-          id: relationalFieldItemId,
-          connections: connectionRemovalMap
-        });
-      }
-    } else if (typeof idOrIdList === "string") {
-      updateItem({
-        id: objectId,
-        connections: {
-          [relationalFieldItemId]: undefined
+          updateItem({
+            id: relationalFieldItemId,
+            connections: connectionRemovalMap
+          });
         }
-      });
-      deleteItem(relationalFieldItemId);
+      } else if (typeof idOrIdList === "string") {
+        updateItem({
+          id: objectId,
+          connections: {
+            [relationalFieldItemId]: undefined
+          }
+        });
+        deleteItem(relationalFieldItemId);
+      }
     }
   }
 };
