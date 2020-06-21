@@ -162,7 +162,8 @@ const relateObjects = (
   }
 };
 const getObjectRelationalFieldItemIdMap = (
-  objectId: string
+  objectId: string,
+  fieldMap: { [keys: string]: boolean }
 ): { [key: string]: string } => {
   const { connections = {} } = readItem(objectId);
   const map = {};
@@ -176,7 +177,9 @@ const getObjectRelationalFieldItemIdMap = (
       // This is a relationship connection.
       const { value: keyName } = readItem(fromId);
 
-      map[keyName] = toId;
+      if (!fieldMap || fieldMap.hasOwnProperty(keyName)) {
+        map[keyName] = toId;
+      }
     }
   }
 
@@ -240,7 +243,38 @@ const getRelatedObjects = (
   objectId: string,
   fieldMap: { [key: string]: boolean } = {}
 ): { [key: string]: SmeltedObject | SmeltedObject[] } => {
-  // TODO: Implement.
+  const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(
+    objectId,
+    fieldMap
+  );
+  const relatedObjects = {};
+
+  for (const relationalFieldName in objectRelationalFieldItemIdMap) {
+    const relationalFieldItemId =
+      objectRelationalFieldItemIdMap[relationalFieldName];
+    const { connections: relationalConnectionMap = {} } = readItem(
+      relationalFieldItemId
+    );
+    const relationalConnectionMapKeys = Object.keys(relationalConnectionMap);
+    const keyCount = relationalConnectionMapKeys.length;
+
+    if (keyCount === 1) {
+      // TODO: Is this just an array of one related object???
+      const singleRelatedItemId = relationalConnectionMapKeys[0];
+
+      relateObjects[relationalFieldName] = readObject(singleRelatedItemId);
+    } else if (keyCount > 1) {
+      const relatedItemList = [];
+
+      for (const relatedItemId of relationalConnectionMapKeys) {
+        relatedItemList.push(readObject(relatedItemId));
+      }
+
+      relateObjects[relationalFieldName] = relatedItemList;
+    }
+  }
+
+  return relatedObjects;
 };
 const readObject = (id: string): SmeltedObject => {
   const { connections = {} } = readItem(id);
