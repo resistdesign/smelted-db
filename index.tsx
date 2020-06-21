@@ -138,7 +138,6 @@ const relateObjects = (
 ) => {
   for (const relationalFieldName in connectionMap) {
     const idOrIdList = connectionMap[relationalFieldName];
-    // TODO: Does the relationship item already exist for this field?
     const { id: relationalFieldItemId } = createItem(relationalFieldName);
     const relationalFieldItemConnectionMap = {};
 
@@ -252,15 +251,8 @@ const deleteObject = (objectId: string) => {
 
   for (const fromId in connections) {
     const toId = connections[fromId];
-    const { connections: valueConnections = {} } = readItem(toId);
 
     deleteItem(fromId);
-
-    for (const vConId in valueConnections) {
-      // TODO: DO NOT delete directly related objects.
-      deleteItem(vConId);
-    }
-
     deleteItem(toId);
   }
 
