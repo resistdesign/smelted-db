@@ -218,9 +218,15 @@ const getObjectValueItemIdMap = (
 
   for (const fromId in connections) {
     const toId = connections[fromId];
-    const { value: keyName } = readItem(fromId);
 
-    map[keyName] = toId;
+    // TRICKY: Check to see if this is a relationship connection or a key/value connection.
+    // IMPORTANT: Omit relationship connections.
+    if (toId !== fromId) {
+      // This is a key/value connection.
+      const { value: keyName } = readItem(fromId);
+
+      map[keyName] = toId;
+    }
   }
 
   return map;
@@ -228,7 +234,7 @@ const getObjectValueItemIdMap = (
 const updateObject = (obj: SmeltedObject) => {
   const { id, ...other } = obj;
   const objectValueItemIdMap = getObjectValueItemIdMap(id);
-  // TODO: Relational connection vs value items connections???
+
   for (const k in obj) {
     const value = obj[k];
     const valueId = objectValueItemIdMap[k];
