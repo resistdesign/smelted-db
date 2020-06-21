@@ -102,6 +102,9 @@ type SmeltedObject = {
   id?: string;
   [keys: string]: string;
 };
+type SmeltedObjectConnectionMap = {
+  [key: string]: string | string[];
+};
 
 const createObject = (
   obj: SmeltedObject,
@@ -122,6 +125,41 @@ const createObject = (
     ...obj,
     id
   };
+};
+const relateObjects = (
+  objectId: string,
+  connectionMap: SmeltedObjectConnectionMap = {}
+) => {
+  for (const relationalFieldName in connectionMap) {
+    const idOrIdList = connectionMap[relationalFieldName];
+    const { id: relationalFieldItemId } = createItem(relationalFieldName);
+
+    if (idOrIdList instanceof Array) {
+      const connectionMap = {};
+
+      for (const idInList of idOrIdList) {
+        connectionMap[idInList] = idInList;
+      }
+
+      updateItem({
+        id: objectId,
+        connections: {
+          [relationalFieldItemId]: relationalFieldItemId
+        }
+      });
+      updateItem({
+        id: relationalFieldItemId,
+        connections: connectionMap
+      });
+    } else if (typeof idOrIdList === "string") {
+      updateItem({
+        id: relationalFieldItemId,
+        connections: {
+          [idOrIdList]: idOrIdList
+        }
+      });
+    }
+  }
 };
 const readObject = (id: string): SmeltedObject => {
   const { connections = {} } = readItem(id);
