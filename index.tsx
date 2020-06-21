@@ -210,6 +210,9 @@ const readObject = (id: string): SmeltedObject => {
 
   return obj;
 };
+const updateObject = () => {
+  // TODO: Implement.
+};
 
 // Input/Output
 
