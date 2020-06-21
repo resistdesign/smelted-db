@@ -198,6 +198,8 @@ const unrelateObjects = (
       const relationalFieldItemId = obj[relationalFieldName];
       const relationalFieldItemConnectionMap = {};
 
+      let removeRelationalFieldItem = false;
+
       if (idOrIdList instanceof Array) {
         const connectionRemovalMap = {};
 
@@ -208,8 +210,21 @@ const unrelateObjects = (
             id: relationalFieldItemId,
             connections: connectionRemovalMap
           });
+
+          const { connections: remainingConnections = {} } = readItem(
+            relationalFieldItemId
+          );
+          const remainingConnectionKeys = Object.keys(remainingConnections);
+
+          if (remainingConnectionKeys.length < 1) {
+            removeRelationalFieldItem = true;
+          }
         }
       } else if (typeof idOrIdList === "string") {
+        removeRelationalFieldItem = true;
+      }
+
+      if (removeRelationalFieldItem) {
         updateItem({
           id: objectId,
           connections: {
