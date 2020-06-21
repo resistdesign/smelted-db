@@ -163,7 +163,7 @@ const relateObjects = (
 };
 const getObjectRelationalFieldItemIdMap = (
   objectId: string,
-  fieldMap: { [keys: string]: boolean }
+  fieldMap?: { [keys: string]: boolean }
 ): { [key: string]: string } => {
   const { connections = {} } = readItem(objectId);
   const map = {};
