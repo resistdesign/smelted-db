@@ -316,6 +316,7 @@ const getObjectValueItemIdMap = (
 const updateObject = (obj: SmeltedObject) => {
   const { id, ...other } = obj;
   const objectValueItemIdMap = getObjectValueItemIdMap(id);
+  const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(id);
 
   for (const k in obj) {
     const value = obj[k];
@@ -326,8 +327,10 @@ const updateObject = (obj: SmeltedObject) => {
         id: valueId,
         value
       });
-    } else {
-      // TODO: Relationship connections could be broken here.
+    } else if (
+      // IMPORTANT: Ensure that this is not a relational field.
+      !objectRelationalFieldItemIdMap.hasOwnProperty(k)
+    ) {
       const { id: keyId } = createItem(k);
       const { id: valueId } = createItem(value);
 
