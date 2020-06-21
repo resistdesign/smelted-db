@@ -138,6 +138,7 @@ const relateObjects = (
 ) => {
   for (const relationalFieldName in connectionMap) {
     const idOrIdList = connectionMap[relationalFieldName];
+    // TODO: Does the relationship item already exist for this field?
     const { id: relationalFieldItemId } = createItem(relationalFieldName);
     const relationalFieldItemConnectionMap = {};
 
@@ -228,7 +229,7 @@ const getObjectValueItemIdMap = (
 const updateObject = (obj: SmeltedObject) => {
   const { id, ...other } = obj;
   const objectValueItemIdMap = getObjectValueItemIdMap(id);
-
+  // TODO: Relational connection vs value items connections???
   for (const k in obj) {
     const value = obj[k];
     const valueId = objectValueItemIdMap[k];
@@ -245,6 +246,25 @@ const updateObject = (obj: SmeltedObject) => {
       setConnection(id, keyId, valueId);
     }
   }
+};
+const deleteObject = (objectId: string) => {
+  const { connections = {} } = readItem(objectId);
+
+  for (const fromId in connections) {
+    const toId = connections[fromId];
+    const { connections: valueConnections = {} } = readItem(toId);
+
+    deleteItem(fromId);
+
+    for (const vConId in valueConnections) {
+      // TODO: DO NOT delete directly related objects.
+      deleteItem(vConId);
+    }
+
+    deleteItem(toId);
+  }
+
+  deleteItem(objectId);
 };
 
 // **********
