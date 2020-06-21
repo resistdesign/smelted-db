@@ -166,7 +166,7 @@ const unrelateObjects = (
   connectionMap: SmeltedObjectConnectionMap = {}
 ) => {
   const obj = readObject(objectId);
-
+  // TODO: Make sure key/value connections aren't being removed/disconnected.
   for (const relationalFieldName in connectionMap) {
     const idOrIdList = connectionMap[relationalFieldName];
     const relationalFieldItemId = obj[relationalFieldName];
@@ -193,6 +193,12 @@ const unrelateObjects = (
       deleteItem(relationalFieldItemId);
     }
   }
+};
+const getRelatedObjects = (
+  objectId: string,
+  fieldMap: { [key: string]: boolean } = {}
+): { [key: string]: SmeltedObject | SmeltedObject[] } => {
+  // TODO: Implement.
 };
 const readObject = (id: string): SmeltedObject => {
   const { connections = {} } = readItem(id);
@@ -245,6 +251,7 @@ const updateObject = (obj: SmeltedObject) => {
         value
       });
     } else {
+      // TODO: Relationship connections could be broken here.
       const { id: keyId } = createItem(k);
       const { id: valueId } = createItem(value);
 
