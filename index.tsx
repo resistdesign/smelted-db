@@ -210,11 +210,46 @@ const readObject = (id: string): SmeltedObject => {
 
   return obj;
 };
-const updateObject = () => {
-  // TODO: Implement.
+const getObjectValueItemIdMap = (
+  objectId: string
+): { [key: string]: string } => {
+  const { connections = {} } = readItem(objectId);
+  const map = {};
+
+  for (const fromId in connections) {
+    const toId = connections[fromId];
+    const { value: keyName } = readItem(fromId);
+
+    map[keyName] = toId;
+  }
+
+  return map;
+};
+const updateObject = (obj: SmeltedObject) => {
+  const { id, ...other } = obj;
+  const objectValueItemIdMap = getObjectValueItemIdMap(id);
+
+  for (const k in obj) {
+    const value = obj[k];
+    const valueId = objectValueItemIdMap[k];
+
+    if (!!valueId) {
+      updateItem({
+        id: valueId,
+        value
+      });
+    } else {
+      const { id: keyId } = createItem(k);
+      const { id: valueId } = createItem(value);
+
+      setConnection(id, keyId, valueId);
+    }
+  }
 };
 
+// **********
 // Input/Output
+// **********
 
 const App = () => {
   const [v, setV] = useState("");
