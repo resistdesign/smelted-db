@@ -265,15 +265,15 @@ const unrelateObjects = (
     }
   }
 };
-const getRelatedObjects = (
+const getRelatedObjectIds = (
   objectId: string,
   fieldMap: { [key: string]: boolean } = {}
-): { [key: string]: SmeltedObject[] } => {
+): { [key: string]: string[] } => {
   const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(
     objectId,
     fieldMap
   );
-  const relatedObjectMap = {};
+  const relatedObjectIdMap = {};
 
   for (const relationalFieldName in objectRelationalFieldItemIdMap) {
     const relationalFieldItemId =
@@ -281,10 +281,29 @@ const getRelatedObjects = (
     const { connections: relationalConnectionMap = {} } = readItem(
       relationalFieldItemId
     );
-
-    const relatedItemList = [];
+    const relatedItemIdList = [];
 
     for (const relatedItemId in relationalConnectionMap) {
+      relatedItemIdList.push(relatedItemId);
+    }
+
+    relatedObjectIdMap[relationalFieldName] = relatedItemIdList;
+  }
+
+  return relatedObjectIdMap;
+};
+const getRelatedObjects = (
+  objectId: string,
+  fieldMap: { [key: string]: boolean } = {}
+): { [key: string]: SmeltedObject[] } => {
+  const relatedObjectIdMap = getRelatedObjectIds(objectId, fieldMap);
+  const relatedObjectMap = {};
+
+  for (const relationalFieldName in relatedObjectIdMap) {
+    const relatedObjectIdList = relatedObjectIdMap[relationalFieldName];
+    const relatedItemList = [];
+
+    for (const relatedItemId of relatedObjectIdList) {
       relatedItemList.push(readObject(relatedItemId));
     }
 
@@ -416,9 +435,12 @@ const App = () => {
     e => {
       const objectId = e.currentTarget.dataset.itemId as string;
       const { [objectId]: removedId, ...other } = v;
+      const {
+        address: [addressId]
+      } = getRelatedObjectIds(objectId, { address: true });
 
-      unrelateObjects(objectId);
       deleteObject(objectId);
+      deleteObject(addressId);
 
       setV(other);
     },
