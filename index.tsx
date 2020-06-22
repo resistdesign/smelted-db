@@ -432,17 +432,21 @@ const App = () => {
   return (
     <div>
       <form onSubmit={onSubmit}>
-        <input defaultValue="" name="firstName" placeholder="First Name" />
-        <input defaultValue="" name="lastName" placeholder="Last Name" />
+        <input defaultValue="R" name="firstName" placeholder="First Name" />
+        <input defaultValue="G" name="lastName" placeholder="Last Name" />
         <input
-          defaultValue=""
+          defaultValue="44"
           name="streetNumber"
           placeholder="Street Number"
         />
-        <input defaultValue="" name="streetName" placeholder="Street Name" />
-        <input defaultValue="" name="city" placeholder="City" />
-        <input defaultValue="" name="state" placeholder="State" />
-        <input defaultValue="" name="zip" placeholder="Zip" />
+        <input
+          defaultValue="Junk Bot Dr."
+          name="streetName"
+          placeholder="Street Name"
+        />
+        <input defaultValue="Large Soda" name="city" placeholder="City" />
+        <input defaultValue="CA" name="state" placeholder="State" />
+        <input defaultValue="09243" name="zip" placeholder="Zip" />
         <button type="submit">Add</button>
         <br />
         {contactObjectList.map(
