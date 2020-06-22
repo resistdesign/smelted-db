@@ -106,7 +106,7 @@ const deleteItem = id => {
 
 type SmeltedObject = {
   id?: string;
-  [keys: string]: string;
+  [keys: string]: string | SmeltedObject;
 };
 type SmeltedObjectConnectionMap = {
   [key: string]: string | string[];
@@ -122,7 +122,7 @@ const createObject = (
   for (const k in obj) {
     const value = obj[k];
     const { id: keyId } = createItem(k);
-    const { id: valueId } = createItem(value);
+    const { id: valueId } = createItem(value as string);
 
     setConnection(id, keyId, valueId);
   }
@@ -236,7 +236,7 @@ const unrelateObjects = (
           connectionRemovalMap[idInList] = undefined;
 
           updateItem({
-            id: relationalFieldItemId,
+            id: relationalFieldItemId as string,
             connections: connectionRemovalMap
           });
 
@@ -257,7 +257,7 @@ const unrelateObjects = (
         updateItem({
           id: objectId,
           connections: {
-            [relationalFieldItemId]: undefined
+            [relationalFieldItemId as string]: undefined
           }
         });
         deleteItem(relationalFieldItemId);
@@ -268,7 +268,7 @@ const unrelateObjects = (
 const getRelatedObjects = (
   objectId: string,
   fieldMap: { [key: string]: boolean } = {}
-): { [key: string]: SmeltedObject | SmeltedObject[] } => {
+): { [key: string]: SmeltedObject[] } => {
   const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(
     objectId,
     fieldMap
@@ -319,7 +319,7 @@ const updateObject = (obj: SmeltedObject) => {
   const objectRelationalFieldItemIdMap = getObjectRelationalFieldItemIdMap(id);
 
   for (const k in obj) {
-    const value = obj[k];
+    const value = obj[k] as string;
     const valueId = objectValueItemIdMap[k];
 
     if (!!valueId) {
@@ -355,15 +355,56 @@ const deleteObject = (objectId: string) => {
 // Input/Output
 // **********
 
+interface Address extends SmeltedObject {
+  streetNumber: string;
+  streetName: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
+interface Contact extends SmeltedObject {
+  firstName: string;
+  lastName: string;
+  address?: Address;
+}
+
 const App = () => {
-  const [v, setV] = useState("");
+  const [v, setV]: [{ [key: string]: string }, Function] = useState({});
   const onSubmit = useCallback(
     e => {
-      const newValue = e.target.v.value;
-
       e.preventDefault();
 
-      createItem(newValue);
+      const {
+        target: {
+          firstName,
+          lastName,
+          streetNumber,
+          streetName,
+          city,
+          state,
+          zip
+        }
+      } = e;
+      const contact: Contact = {
+        firstName: firstName.value,
+        lastName: lastName.value
+      };
+      const address: Address = {
+        streetNumber: streetNumber.value,
+        streetName: streetName.value,
+        city: city.value,
+        state: state.value,
+        zip: zip.value
+      };
+      const { id: contactId } = createObject(contact as SmeltedObject);
+      const { id: addressId } = createObject(address);
+      const newValue = {
+        ...v,
+        contactId
+      };
+
+      relateObjects(contactId, { address: addressId });
 
       setV(newValue);
 
@@ -373,24 +414,55 @@ const App = () => {
   );
   const onDelete = useCallback(
     e => {
-      deleteItem(e.target.dataset.itemId);
+      const objectId = e.target.dataset.itemId as string;
+      const { [objectId]: removedId, ...other } = v;
 
-      setV("");
+      setV(other);
     },
     [v, setV]
+  );
+  const contactObjectList: Contact[] = Object.keys(v).map(
+    cId =>
+      ({
+        ...readObject(cId),
+        address: getRelatedObjects(cId, { address: true }).address[0]
+      } as Contact)
   );
 
   return (
     <div>
       <form onSubmit={onSubmit}>
-        <input defaultValue="" name="v" />
+        <input defaultValue="" name="firstName" placeholder="First Name" />
+        <input defaultValue="" name="lastName" placeholder="Last Name" />
+        <input
+          defaultValue=""
+          name="streetNumber"
+          placeholder="Street Number"
+        />
+        <input defaultValue="" name="streetName" placeholder="Street Name" />
+        <input defaultValue="" name="city" placeholder="City" />
+        <input defaultValue="" name="state" placeholder="State" />
+        <input defaultValue="" name="zip" placeholder="Zip" />
         <button type="submit">Add</button>
         <br />
-        {Object.keys(ValueDBMap).map(k => (
-          <div key={`Item:${k}`} data-item-id={k} onClick={onDelete}>
-            {ValueDBMap[k]}
-          </div>
-        ))}
+        {contactObjectList.map(
+          ({
+            id,
+            firstName,
+            lastName,
+            address: { streetNumber, streetName, city, state, zip }
+          }) => (
+            <div key={`Contact:${id}`} data-item-id={id} onClick={onDelete}>
+              {firstName} {lastName}
+              <br />
+              <small>
+                {streetNumber} {streetName}
+                <br />
+                {city} {state} {zip}
+              </small>
+            </div>
+          )
+        )}
       </form>
     </div>
   );
