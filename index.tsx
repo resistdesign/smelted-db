@@ -401,7 +401,7 @@ const App = () => {
       const { id: addressId } = createObject(address);
       const newValue = {
         ...v,
-        contactId
+        [contactId]: contactId
       };
 
       relateObjects(contactId, { address: addressId });
