@@ -281,23 +281,14 @@ const getRelatedObjects = (
     const { connections: relationalConnectionMap = {} } = readItem(
       relationalFieldItemId
     );
-    const relationalConnectionMapKeys = Object.keys(relationalConnectionMap);
-    const keyCount = relationalConnectionMapKeys.length;
 
-    if (keyCount === 1) {
-      // TODO: Is this just an array of one related object???
-      const singleRelatedItemId = relationalConnectionMapKeys[0];
+    const relatedItemList = [];
 
-      relateObjects[relationalFieldName] = readObject(singleRelatedItemId);
-    } else if (keyCount > 1) {
-      const relatedItemList = [];
-
-      for (const relatedItemId of relationalConnectionMapKeys) {
-        relatedItemList.push(readObject(relatedItemId));
-      }
-
-      relateObjects[relationalFieldName] = relatedItemList;
+    for (const relatedItemId in relationalConnectionMap) {
+      relatedItemList.push(readObject(relatedItemId));
     }
+
+    relateObjects[relationalFieldName] = relatedItemList;
   }
 
   return relatedObjects;
