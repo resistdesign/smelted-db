@@ -417,6 +417,9 @@ const App = () => {
       const objectId = e.currentTarget.dataset.itemId as string;
       const { [objectId]: removedId, ...other } = v;
 
+      unrelateObjects(objectId);
+      deleteObject(objectId);
+
       setV(other);
     },
     [v, setV]
