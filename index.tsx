@@ -132,33 +132,59 @@ const createObject = (
     id
   };
 };
+const getObjectValueItemIdMap = (
+  objectId: string
+): { [key: string]: string } => {
+  const { connections = {} } = readItem(objectId);
+  const map = {};
+
+  for (const fromId in connections) {
+    const toId = connections[fromId];
+
+    // TRICKY: Check to see if this is a relationship connection or a key/value connection.
+    // IMPORTANT: Omit relationship connections.
+    if (toId !== fromId) {
+      // This is a key/value connection.
+      const { value: keyName } = readItem(fromId);
+
+      map[keyName] = toId;
+    }
+  }
+
+  return map;
+};
 const relateObjects = (
   objectId: string,
   connectionMap: SmeltedObjectConnectionMap = {}
 ) => {
+  const objectValueItemIdMap = getObjectValueItemIdMap(objectId);
+
   for (const relationalFieldName in connectionMap) {
-    const idOrIdList = connectionMap[relationalFieldName];
-    const { id: relationalFieldItemId } = createItem(relationalFieldName);
-    const relationalFieldItemConnectionMap = {};
+    // IMPORTANT: Ensure that this is not a key/value field.
+    if (!objectValueItemIdMap.hasOwnProperty(relationalFieldName)) {
+      const idOrIdList = connectionMap[relationalFieldName];
+      const { id: relationalFieldItemId } = createItem(relationalFieldName);
+      const relationalFieldItemConnectionMap = {};
 
-    if (idOrIdList instanceof Array) {
-      for (const idInList of idOrIdList) {
-        relationalFieldItemConnectionMap[idInList] = idInList;
+      if (idOrIdList instanceof Array) {
+        for (const idInList of idOrIdList) {
+          relationalFieldItemConnectionMap[idInList] = idInList;
+        }
+      } else if (typeof idOrIdList === "string") {
+        relationalFieldItemConnectionMap[idOrIdList] = idOrIdList;
       }
-    } else if (typeof idOrIdList === "string") {
-      relationalFieldItemConnectionMap[idOrIdList] = idOrIdList;
+
+      updateItem({
+        id: objectId,
+        connections: {
+          [relationalFieldItemId]: relationalFieldItemId
+        }
+      });
+      updateItem({
+        id: relationalFieldItemId,
+        connections: relationalFieldItemConnectionMap
+      });
     }
-
-    updateItem({
-      id: objectId,
-      connections: {
-        [relationalFieldItemId]: relationalFieldItemId
-      }
-    });
-    updateItem({
-      id: relationalFieldItemId,
-      connections: relationalFieldItemConnectionMap
-    });
   }
 };
 const getObjectRelationalFieldItemIdMap = (
@@ -195,7 +221,7 @@ const unrelateObjects = (
   );
 
   for (const relationalFieldName in connectionMap) {
-    // IMPORTANT: Make sure key/value connections aren't being removed/disconnected.
+    // IMPORTANT: Ensure that this is not a key/value field.
     if (objectRelationalFieldItemIdMap.hasOwnProperty(relationalFieldName)) {
       const idOrIdList = connectionMap[relationalFieldName];
       const relationalFieldItemId = obj[relationalFieldName];
@@ -291,27 +317,6 @@ const readObject = (id: string): SmeltedObject => {
   obj.id = id;
 
   return obj;
-};
-const getObjectValueItemIdMap = (
-  objectId: string
-): { [key: string]: string } => {
-  const { connections = {} } = readItem(objectId);
-  const map = {};
-
-  for (const fromId in connections) {
-    const toId = connections[fromId];
-
-    // TRICKY: Check to see if this is a relationship connection or a key/value connection.
-    // IMPORTANT: Omit relationship connections.
-    if (toId !== fromId) {
-      // This is a key/value connection.
-      const { value: keyName } = readItem(fromId);
-
-      map[keyName] = toId;
-    }
-  }
-
-  return map;
 };
 const updateObject = (obj: SmeltedObject) => {
   const { id, ...other } = obj;
