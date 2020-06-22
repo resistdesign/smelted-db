@@ -273,7 +273,7 @@ const getRelatedObjects = (
     objectId,
     fieldMap
   );
-  const relatedObjects = {};
+  const relatedObjectMap = {};
 
   for (const relationalFieldName in objectRelationalFieldItemIdMap) {
     const relationalFieldItemId =
@@ -288,10 +288,10 @@ const getRelatedObjects = (
       relatedItemList.push(readObject(relatedItemId));
     }
 
-    relateObjects[relationalFieldName] = relatedItemList;
+    relatedObjectMap[relationalFieldName] = relatedItemList;
   }
 
-  return relatedObjects;
+  return relatedObjectMap;
 };
 const readObject = (id: string): SmeltedObject => {
   const { connections = {} } = readItem(id);
