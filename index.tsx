@@ -452,26 +452,33 @@ const App = () => {
         <input defaultValue="CA" name="state" placeholder="State" />
         <input defaultValue="09243" name="zip" placeholder="Zip" />
         <button type="submit">Add</button>
-        <br />
-        {contactObjectList.map(
-          ({
-            id,
-            firstName,
-            lastName,
-            address: { streetNumber, streetName, city, state, zip }
-          }) => (
-            <div key={`Contact:${id}`} data-item-id={id} onClick={onDelete}>
-              {firstName} {lastName}
-              <br />
-              <small>
-                {streetNumber} {streetName}
-                <br />
-                {city} {state} {zip}
-              </small>
-            </div>
-          )
-        )}
       </form>
+      {contactObjectList.length ? <br /> : undefined}
+      {contactObjectList.map(
+        ({
+          id,
+          firstName,
+          lastName,
+          address: { streetNumber, streetName, city, state, zip }
+        }) => (
+          <div key={`Contact:${id}`} data-item-id={id} onClick={onDelete}>
+            {firstName} {lastName}
+            <br />
+            <small>
+              {streetNumber} {streetName}
+              <br />
+              {city} {state} {zip}
+            </small>
+          </div>
+        )
+      )}
+      {contactObjectList.length ? <br /> : undefined}
+      <pre>
+        {JSON.stringify(ValueDBMap, null, "  ")}
+        <br />
+        <br />
+        {JSON.stringify(ConnectionDBMap, null, "  ")}
+      </pre>
     </div>
   );
 };
