@@ -414,7 +414,7 @@ const App = () => {
   );
   const onDelete = useCallback(
     e => {
-      const objectId = e.target.dataset.itemId as string;
+      const objectId = e.currentTarget.dataset.itemId as string;
       const { [objectId]: removedId, ...other } = v;
 
       setV(other);
@@ -432,8 +432,12 @@ const App = () => {
   return (
     <div>
       <form onSubmit={onSubmit}>
-        <input defaultValue="R" name="firstName" placeholder="First Name" />
-        <input defaultValue="G" name="lastName" placeholder="Last Name" />
+        <input defaultValue="Ryan" name="firstName" placeholder="First Name" />
+        <input
+          defaultValue={uuidv4()}
+          name="lastName"
+          placeholder="Last Name"
+        />
         <input
           defaultValue="44"
           name="streetNumber"
