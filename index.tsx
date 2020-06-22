@@ -308,10 +308,14 @@ const readObject = (id: string): SmeltedObject => {
 
   for (const fromId in connections) {
     const toId = connections[fromId];
-    const { value: k } = readItem(fromId);
-    const { value } = readItem(toId);
 
-    obj[k] = value;
+    // IMPORTANT: Ensure that relational fields are not beeing read.
+    if (toId !== fromId) {
+      const { value: k } = readItem(fromId);
+      const { value } = readItem(toId);
+
+      obj[k] = value;
+    }
   }
 
   obj.id = id;
